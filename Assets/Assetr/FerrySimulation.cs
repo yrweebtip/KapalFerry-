@@ -32,7 +32,7 @@ public class FerrySimulation : MonoBehaviour
             {
                 interactionButton.GetComponent<Button>().onClick.AddListener(LoadCars);
             }
-            else if (currentPort == "PelabuhanTujuan" && isHoldingCar)
+            else if (currentPort == "PelabuhanTujuan" &! isHoldingCar)
             {
                 interactionButton.GetComponent<Button>().onClick.AddListener(UnloadCars);
             }
