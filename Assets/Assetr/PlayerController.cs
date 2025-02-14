@@ -1,59 +1,47 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class PlayerController : MonoBehaviour
+public class ShipMovement : MonoBehaviour
 {
-    public float acceleration = 5f;   // Seberapa cepat kapal bergerak
-    public float maxSpeed = 4f;       // Kecepatan maksimum kapal
-    public float turnSpeed = 40f;     // Seberapa cepat kapal berbelok
-    public float turnDamping = 2f;    // Mengurangi efek putaran berlebih
-    public float moveDamping = 0.98f; // Mengurangi efek meluncur (friksi air)
+    public float forwardSpeed = 5f;
+    public float turnSpeed = 50f;
 
-    private Rigidbody rb;
-    private float moveInput = 0f;
-    private float turnInput = 0f;
+    public Button forwardButton;
+    public Button backwardButton;
+    public Button leftButton;
+    public Button rightButton;
 
-    void Start()
+    private bool moveForward, moveBackward, turnLeft, turnRight;
+
+    private void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.linearDamping = 1f;               // Sedikit drag untuk memperlambat setelah lepas tombol
-        rb.angularDamping = 2f;        // Mengurangi efek putaran berlebihan
+        AddEventTrigger(forwardButton, EventTriggerType.PointerDown, () => moveForward = true);
+        AddEventTrigger(forwardButton, EventTriggerType.PointerUp, () => moveForward = false);
+
+        AddEventTrigger(backwardButton, EventTriggerType.PointerDown, () => moveBackward = true);
+        AddEventTrigger(backwardButton, EventTriggerType.PointerUp, () => moveBackward = false);
+
+        AddEventTrigger(leftButton, EventTriggerType.PointerDown, () => turnLeft = true);
+        AddEventTrigger(leftButton, EventTriggerType.PointerUp, () => turnLeft = false);
+
+        AddEventTrigger(rightButton, EventTriggerType.PointerDown, () => turnRight = true);
+        AddEventTrigger(rightButton, EventTriggerType.PointerUp, () => turnRight = false);
     }
 
-    void FixedUpdate()
+    private void Update()
     {
-        // Tambahkan gaya maju/mundur hanya jika ada input
-        if (moveInput != 0)
-        {
-            rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
-        }
-        else
-        {
-            // Terapkan damping hanya saat tidak ada input
-            rb.linearVelocity *= moveDamping;
-        }
-
-        // Batasi kecepatan maksimum kapal
-        if (rb.linearVelocity.magnitude > maxSpeed)
-        {
-            rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
-        }
-
-        // Belok lebih smooth
-        if (turnInput != 0)
-        {
-            rb.AddTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
-        }
-
-        // Stabilkan rotasi agar tidak terus berputar setelah lepas tombol
-        rb.angularVelocity *= (1f - Time.fixedDeltaTime * turnDamping);
+        if (moveForward) transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime);
+        if (moveBackward) transform.Translate(-Vector3.forward * forwardSpeed * Time.deltaTime);
+        if (turnLeft) transform.Rotate(Vector3.up, -turnSpeed * Time.deltaTime);
+        if (turnRight) transform.Rotate(Vector3.up, turnSpeed * Time.deltaTime);
     }
 
-    // Fungsi untuk mengontrol tombol D-Pad
-    public void MoveForward() { moveInput = 1f; }
-    public void MoveBackward() { moveInput = -1f; }
-    public void StopMoving() { moveInput = 0f; }
-
-    public void TurnLeft() { turnInput = -1f; }
-    public void TurnRight() { turnInput = 1f; }
-    public void StopTurning() { turnInput = 0f; }
+    void AddEventTrigger(Button button, EventTriggerType type, System.Action action)
+    {
+        EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>() ?? button.gameObject.AddComponent<EventTrigger>();
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
+        entry.callback.AddListener((eventData) => action());
+        trigger.triggers.Add(entry);
+    }
 }

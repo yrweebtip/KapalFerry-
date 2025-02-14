@@ -2,25 +2,25 @@ using UnityEngine;
 
 public class Floater : MonoBehaviour
 {
-    public Rigidbody rigidBody;
-    public float depthBeforeSubmerged = 1f;
-    public float displacementAmount = 3f;
-    public int floaterCounter = 1;
-    public float waterDrag = 0.99f;
-    public float waterAngularDrag = 0.5f;
+    public float floatHeight = 2f;
+    public float bounceDamp = 0.05f;
+    public float waterLevel = 0f;
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
-        rigidBody.AddForceAtPosition(Physics.gravity / floaterCounter, transform.position, ForceMode.Acceleration);
-        float waveheight = WaveManager.instance.GetWaveHeight(transform.position.x);
-        if (transform.position.y < waveheight)
+        Vector3 pos = transform.position;
+        float waveHeight = GetWaveHeightAtPosition(pos);
 
+        if (pos.y < waveHeight)
         {
-            float displaceMultiplier = Mathf.Clamp01((waveheight - transform.position.y) - transform.position.y / depthBeforeSubmerged) * displacementAmount;
-            rigidBody.AddForceAtPosition(new Vector3(0f, Mathf.Abs(Physics.gravity.y) * displaceMultiplier, 0f), transform.position, ForceMode.Acceleration);
-            rigidBody.AddForce(displaceMultiplier * -rigidBody.linearVelocity * waterDrag * Time.fixedDeltaTime, ForceMode.VelocityChange);
-            rigidBody.AddTorque(displaceMultiplier * -rigidBody.angularVelocity * waterAngularDrag * Time.fixedDeltaTime, ForceMode.VelocityChange);
+            float buoyancyForce = (waveHeight - pos.y) * floatHeight - GetComponent<Rigidbody>().linearVelocity.y * bounceDamp;
+            GetComponent<Rigidbody>().AddForce(new Vector3(0, buoyancyForce, 0), ForceMode.Acceleration);
         }
     }
 
+    float GetWaveHeightAtPosition(Vector3 position)
+    {
+        // Ambil data tinggi ombak dari sistem Dynamic Wave
+        return Mathf.Sin(Time.time + position.x) + waterLevel; // Contoh ombak sederhana
+    }
 }
