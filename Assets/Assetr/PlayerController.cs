@@ -5,7 +5,8 @@ public class PlayerController : MonoBehaviour
     public float acceleration = 5f;   // Seberapa cepat kapal bergerak
     public float maxSpeed = 4f;       // Kecepatan maksimum kapal
     public float turnSpeed = 40f;     // Seberapa cepat kapal berbelok
-    public float turnDamping = 2f;    // Efek untuk mengurangi putaran berlebih
+    public float turnDamping = 2f;    // Mengurangi efek putaran berlebih
+    public float moveDamping = 0.98f; // Mengurangi efek meluncur (friksi air)
 
     private Rigidbody rb;
     private float moveInput = 0f;
@@ -14,16 +15,21 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.linearDamping = 0.5f;               // Sedikit drag untuk mengurangi meluncur
-        rb.angularDamping = 2f;          // Mencegah kapal terus berputar
+        rb.linearDamping = 1f;               // Sedikit drag untuk memperlambat setelah lepas tombol
+        rb.angularDamping = 2f;        // Mengurangi efek putaran berlebihan
     }
 
     void FixedUpdate()
     {
-        // Tambahkan gaya maju hanya jika ada input
+        // Tambahkan gaya maju/mundur hanya jika ada input
         if (moveInput != 0)
         {
             rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
+        }
+        else
+        {
+            // Terapkan damping hanya saat tidak ada input
+            rb.linearVelocity *= moveDamping;
         }
 
         // Batasi kecepatan maksimum kapal
@@ -32,13 +38,13 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
         }
 
-        // Belok dengan lebih smooth
+        // Belok lebih smooth
         if (turnInput != 0)
         {
             rb.AddTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
         }
 
-        // Stabilkan rotasi agar tidak terus berputar
+        // Stabilkan rotasi agar tidak terus berputar setelah lepas tombol
         rb.angularVelocity *= (1f - Time.fixedDeltaTime * turnDamping);
     }
 
