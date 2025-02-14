@@ -1,3 +1,4 @@
+using System;
 using Unity.VisualScripting;
 using UnityEditorInternal;
 using UnityEngine;
@@ -33,5 +34,10 @@ public class WaveManager : MonoBehaviour
     public float GetWaveHeight (float _x)
     {
         return amplitude * Mathf.Sin(_x / lenght + offset);
+    }
+
+    internal Vector3 GetWaveNormal(float x)
+    {
+        throw new NotImplementedException();
     }
 }

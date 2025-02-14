@@ -1,38 +1,46 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float movementSpeed = 4f;
-    public float turnSmoothTime = 0.1f;
+    public float acceleration = 5f;   // Seberapa cepat kapal bergerak
+    public float maxSpeed = 4f;       // Kecepatan maksimum kapal
+    public float turnSpeed = 40f;     // Seberapa cepat kapal berbelok
 
-    private CharacterController characterController;
-    private Joystick joystick;
-    private GameObject cam;
-    private float turnSmoothVelocity;
+    private Rigidbody rb;
+    private float moveInput = 0f;
+    private float turnInput = 0f;
 
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
-        joystick = Object.FindFirstObjectByType<Joystick>();
-        cam = Camera.main.gameObject;
+        rb = GetComponent<Rigidbody>();
+        rb.linearDamping = 0f;  // Hapus efek drag
+        rb.angularDamping = 0f;  // Hapus efek rotasi lambat
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        float horizontal = joystick.Horizontal;
-        float vertical = joystick.Vertical;
-        Vector3 move = new Vector3(horizontal, 0f, vertical).normalized;
-
-        if (move.magnitude >= 0.1f)
+        // Tambahkan gaya ke depan hanya jika ada input gerakan
+        if (moveInput != 0)
         {
-            float targetAngle = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg + cam.transform.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            characterController.Move(moveDirection.normalized * movementSpeed * Time.deltaTime);
+            rb.AddForce(transform.forward * moveInput * acceleration, ForceMode.Acceleration);
         }
+
+        // Batasi kecepatan maksimum kapal
+        if (rb.linearVelocity.magnitude > maxSpeed)
+        {
+            rb.linearVelocity = rb.linearVelocity.normalized * maxSpeed;
+        }
+
+        // Rotasi kapal lebih smooth dengan AddTorque
+        rb.AddTorque(Vector3.up * turnInput * turnSpeed, ForceMode.Acceleration);
     }
+
+    // Fungsi untuk mengontrol tombol D-Pad
+    public void MoveForward() { moveInput = 1f; }
+    public void MoveBackward() { moveInput = -1f; }
+    public void StopMoving() { moveInput = 0f; }
+
+    public void TurnLeft() { turnInput = -1f; }
+    public void TurnRight() { turnInput = 1f; }
+    public void StopTurning() { turnInput = 0f; }
 }
