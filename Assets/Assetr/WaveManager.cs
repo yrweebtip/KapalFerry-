@@ -36,8 +36,16 @@ public class WaveManager : MonoBehaviour
         return amplitude * Mathf.Sin(_x / lenght + offset);
     }
 
-    internal Vector3 GetWaveNormal(float x)
+    
+        public Vector3 GetWaveNormal(float x)
     {
-        throw new NotImplementedException();
+        float delta = 0.1f; // Jarak kecil untuk menghitung perubahan tinggi
+        float heightLeft = GetWaveHeight(x - delta);
+        float heightRight = GetWaveHeight(x + delta);
+
+        Vector3 normal = new Vector3(-(heightRight - heightLeft), 2f * delta, 0f).normalized;
+        return normal;
     }
+
 }
+
