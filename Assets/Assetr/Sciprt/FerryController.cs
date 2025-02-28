@@ -1,10 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class FerryController : MonoBehaviour
 {
     [Header("Docking Settings")]
-    public Transform dockingPoint;  // Posisi tempat kapal akan merapat
     public GameObject dockingButton; // Tombol untuk docking
     public GameObject rope; // Tali pengaman yang muncul setelah docking
     public Transform dockingPointStart;  // Docking point di pelabuhan awal
@@ -20,6 +19,8 @@ public class FerryController : MonoBehaviour
     private bool isDocked = false; // Apakah kapal sudah berlabuh?
     private string currentPort = ""; // Pelabuhan saat ini
     private bool isHoldingCar = false; // Apakah kapal membawa mobil?
+   
+
 
     void Start()
     {
@@ -33,33 +34,42 @@ public class FerryController : MonoBehaviour
         if (other.CompareTag("DockingZone"))
         {
             currentPort = other.name; // Simpan nama pelabuhan
-            Debug.Log("Kapal berada di dekat: " + currentPort);
+            Debug.Log("Kapal berada di: " + currentPort);
 
-            // Tampilkan tombol docking jika belum berlabuh
-            if (!isDocked)
-            {
-                dockingButton.SetActive(true);
-                dockingButton.GetComponent<Button>().onClick.RemoveAllListeners();
-                dockingButton.GetComponent<Button>().onClick.AddListener(DockShip);
-            }
+            dockingButton.SetActive(true); // Tampilkan tombol docking
+
+            dockingButton.GetComponent<Button>().onClick.RemoveAllListeners();
+            dockingButton.GetComponent<Button>().onClick.AddListener(DockShip);
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("DockingZone") && !isDocked)
+        if (other.CompareTag("DockingZone"))
         {
-            dockingButton.SetActive(false);
-            loadUnloadButton.SetActive(false);
-            currentPort = "";
+            Debug.Log("Kapal meninggalkan: " + currentPort);
+
+            dockingButton.SetActive(false); // Sembunyikan tombol docking
+
+            // ✅ Reset status docking saat kapal meninggalkan pelabuhan
+            isDocked = false;
         }
     }
+
+
 
     void DockShip()
     {
         Debug.Log("Docking kapal...");
 
-        // Cek lokasi docking dan pindahkan ke docking point yang sesuai
+        // Pastikan docking hanya terjadi jika belum docking di tempat yang sama
+        if (isDocked)
+        {
+            Debug.Log("Kapal sudah docking sebelumnya, tidak bisa docking lagi di lokasi yang sama.");
+            return;
+        }
+
+        // Tentukan posisi docking berdasarkan pelabuhan saat ini
         if (currentPort == "PelabuhanAwal")
         {
             transform.position = dockingPointStart.position;
@@ -70,31 +80,35 @@ public class FerryController : MonoBehaviour
             transform.position = dockingPointEnd.position;
             transform.rotation = dockingPointEnd.rotation;
         }
+        else
+        {
+            Debug.Log("ERROR: Docking gagal, currentPort tidak valid!");
+            return;
+        }
 
-        // Aktifkan tali pengaman
+        // Aktifkan tali dan sembunyikan tombol docking
         rope.SetActive(true);
-        dockingButton.SetActive(false); // Sembunyikan tombol docking setelah docking
+        dockingButton.SetActive(false);
 
-        // Tandai kapal sudah berlabuh
+        // Tandai kapal sudah docking
         isDocked = true;
+
         Debug.Log("Kapal berhasil docking di " + currentPort);
 
-        // Tampilkan tombol Load/Unload sesuai pelabuhan
+        // Tampilkan tombol Load/Unload jika sesuai
+        loadUnloadButton.SetActive(true);
+        loadUnloadButton.GetComponent<Button>().onClick.RemoveAllListeners();
+
         if (currentPort == "PelabuhanAwal")
         {
-            Debug.Log("Menampilkan tombol Load Cars");
-            loadUnloadButton.SetActive(true);
-            loadUnloadButton.GetComponent<Button>().onClick.RemoveAllListeners();
             loadUnloadButton.GetComponent<Button>().onClick.AddListener(LoadCars);
         }
         else if (currentPort == "PelabuhanTujuan")
         {
-            Debug.Log("Menampilkan tombol Unload Cars");
-            loadUnloadButton.SetActive(true);
-            loadUnloadButton.GetComponent<Button>().onClick.RemoveAllListeners();
             loadUnloadButton.GetComponent<Button>().onClick.AddListener(UnloadCars);
         }
     }
+
 
 
 
